@@ -38,7 +38,7 @@ include_directories(csv2/include
 set(PROJECTNAME ${PROJECT_NAME}${PROJECT_VERSION})
 
 add_executable(${PROJECTNAME} main.cpp)
-target_compile_features(${PROJECTNAME} PRIVATE cxx_std_20)
+target_compile_features(${PROJECTNAME} PRIVATE cxx_std_17)
 set_target_properties(${PROJECTNAME} 
                       PROPERTIES
                       CXX_STANDARD 17
