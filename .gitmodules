@@ -1,0 +1,9 @@
+[submodule "args"]
+	path = args
+	url = https://github.com/Taywee/args.git
+[submodule "spdlog"]
+	path = spdlog
+	url = git@github.com:Sam4uk/spdlog.git
+[submodule "rapidcsv"]
+	path = rapidcsv
+	url = git@github.com:d99kris/rapidcsv.git
