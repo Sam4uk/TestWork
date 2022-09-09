@@ -1,0 +1,8 @@
+Name;email;department;position;project;task;date;logged hours
+John Doe;john.doe@company.com;Delivery;Software Engineer;Mars;MRS-2240;2021-10-19;5
+John Doe;john.doe@company.com;Delivery;Software Engineer;Mars;MRS-2241;2021-10-20;8
+Vasia;superman@company.com;Delivery;Manager;Venus;VNS-1111;2021-10-23;8
+Vasia;superman@company.com;Delivery;Manager;Venus;VNS-1112;2021-10-24;4
+Vasia;superman@company.com;Delivery;Manager;Venus;VNS-1113;2021-10-25;4
+Vasia;superman@company.com;Delivery;Manager;Venus;VNS-1114;2021-10-26;4
+Vasia;superman@company.com;Delivery;Manager;Venus;VNS-1115;2021-10-27;4
