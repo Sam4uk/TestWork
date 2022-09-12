@@ -18,29 +18,68 @@ typedef std::map<std::string, float> MouthArray;
 /* mail, motharray*/
 typedef std::map<std::string, MouthArray> LoggedMonth;
 
+#define DEFAULT_LEVEL (3)
+
+spdlog::level::level_enum intToLevel(int value) {
+  switch (value) {
+    case SPDLOG_LEVEL_TRACE:
+      return spdlog::level::trace;
+      break;
+    case SPDLOG_LEVEL_DEBUG:
+      return spdlog::level::debug;
+      break;
+    case SPDLOG_LEVEL_INFO:
+      return spdlog::level::info;
+      break;
+    case SPDLOG_LEVEL_WARN:
+      return spdlog::level::warn;
+      break;
+    case SPDLOG_LEVEL_ERROR:
+      return spdlog::level::err;
+      break;
+    case SPDLOG_LEVEL_CRITICAL:
+      return spdlog::level::critical;
+      break;
+    case SPDLOG_LEVEL_OFF:
+      return spdlog::level::off;
+      break;
+
+    default:
+      return spdlog::level::info;
+      break;
+  }
+}
+std::string getLevelHelp() {
+  std::string result{"Loging levels:\n"};
+  std::string level_names[] SPDLOG_LEVEL_NAMES;
+  for (auto it{0}; it != (sizeof(level_names) / sizeof(level_names[0])); it++) {
+    result += std::to_string(it) + " - " + level_names[it] + '\n';
+  }
+  return result;
+}
+
 int main(int argc, char const* argv[]) try {
+  spdlog::set_level(intToLevel(DEFAULT_LEVEL));
   LoginName UserNames{};
   LoggedMonth UserMonth{};
   std::filesystem::path InputFileName("./sample.csv");
   std::filesystem::path OutPutFileName("./main.csv");
   // CLI
   {
-    args::ArgumentParser parser(
-        "This is a test program.",
-        "Sam4uk wrote this");
+    args::ArgumentParser parser("This is a test program.", "Sam4uk wrote this");
     args::HelpFlag help(parser, "help", "Display this help menu",
                         {'h', "help"});
-
     args::ValueFlag<std::filesystem::path> InDataPath(
         parser, "input.csv", "The path to the file with the input data",
         {'i', "input"});
     args::ValueFlag<std::filesystem::path> OutDataPath(
         parser, "output.csv", "The path to the file for data storage",
         {'o', "output"});
+    args::ValueFlag<int> LoggLevel(parser, std::to_string(DEFAULT_LEVEL),
+                                   getLevelHelp(), {'l'});
 
     args::CompletionFlag completion(parser, {"complete"});
     try {
-      if (argc < 2) throw args::Help("");
       parser.ParseCLI(argc, argv);
     }
 
@@ -49,29 +88,37 @@ int main(int argc, char const* argv[]) try {
       return EXIT_SUCCESS;
     }
 
-    if (InDataPath) InputFileName = InDataPath.Get();
+    if (InDataPath)
+      InputFileName = InDataPath.Get();
+    else
+      throw std::runtime_error("No set input file name");
+    if (LoggLevel) spdlog::set_level(intToLevel(LoggLevel.Get()));
     if (OutDataPath) OutPutFileName = OutDataPath.Get();
   }
 
-#ifdef TEST_DEBUG
-  spdlog::set_level(spdlog::level::debug);
-#endif
   // Read file
   {
+    if (!std::filesystem::exists(InputFileName))
+      throw std::runtime_error("File " + InputFileName.string() + " no exist");
+    if (std::filesystem::file_size(InputFileName) <= 1)
+      spdlog::warn("File {} is posible empty", InputFileName.string());
     rapidcsv::Document doc(InputFileName, rapidcsv::LabelParams(0, -1),
                            rapidcsv::SeparatorParams(';'));
     spdlog::info("Opened file {0}. The table contains {1} records",
                  InputFileName.filename().string(), doc.GetRowCount());
 
     //читаємо всі рядки
+    spdlog::trace("File {} reading", InputFileName.string());
     for (size_t row_itterator{0}; row_itterator != doc.GetRowCount();
          ++row_itterator) {
+      spdlog::trace("Reading line {}", row_itterator);
       std::string UserMail{doc.GetCell<std::string>("email", row_itterator)};
 
       {
         std::string UserName{doc.GetCell<std::string>("Name", row_itterator)};
         auto foundUser{UserNames.find(UserMail)};
         if (foundUser == UserNames.end()) {
+          spdlog::trace("Found new user email:{}", UserMail);
           UserNames.emplace(UserMail, UserName);
           MouthArray empty;
           UserMonth.emplace(UserMail, empty);
@@ -85,6 +132,7 @@ int main(int argc, char const* argv[]) try {
         auto Hours{doc.GetCell<float>("logged hours", row_itterator)};
 
         if (foundUser != UserMonth.end()) {
+          spdlog::trace("Add month {0} for {1}", UserMail, KeyDate);
           auto foundMonth{foundUser->second.find(KeyDate)};
           if (foundMonth == foundUser->second.end()) {
             foundUser->second.emplace(KeyDate, Hours);
@@ -99,6 +147,7 @@ int main(int argc, char const* argv[]) try {
 
   // RAW-CSV file writing
   {
+    spdlog::trace("Try write file", OutPutFileName.string());
     std::ofstream output(OutPutFileName);
     spdlog::info("The data is stored in {}", OutPutFileName.string());
     output << "Name;Month;Total hours" << std::endl;
@@ -115,8 +164,10 @@ int main(int argc, char const* argv[]) try {
       }
     }
     output.close();
-    spdlog::trace("Done!!!");
+    spdlog::info("Done!!!");
   }
+
+  spdlog::trace("Normal flow end");
   return EXIT_SUCCESS;
 }
 

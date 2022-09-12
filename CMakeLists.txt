@@ -35,7 +35,7 @@ find_package(spdlog REQUIRED)
 include_directories(csv2/include
                     args)
 
-set(PROJECTNAME ${PROJECT_NAME}${PROJECT_VERSION})
+set(PROJECTNAME ${PROJECT_NAME}.${PROJECT_VERSION})
 
 add_executable(${PROJECTNAME} main.cpp)
 target_compile_features(${PROJECTNAME} PRIVATE cxx_std_17)
